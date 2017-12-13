@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RecommendationStrategy xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Travel Strategy</description>
+    <recommendationStrategyName>travel_4</recommendationStrategyName>
+    <masterLabel>Travel</masterLabel>
+
+	<!-- Root -->
+	<strategyNode>
+		<name>RootNode</name>
+		<description>the root</description>
+		<parentNode></parentNode>
+		<type>2<!--Union--></type>
+		<definition>{ removeDuplicates: true }</definition>
+	</strategyNode>
+
+    <strategyNode>
+        <name>BigOpportunity</name>
+		<description>If node which only does churn if Opportunity is more than 5000</description>
+	    <parentNode>RootNode</parentNode>
+		<type>4<!--If--></type>
+		<definition>
+			{
+				expressions: {
+					"SuggestTravelNode": "$Record.Amount &gt; 5000"
+				},
+				onlyFirstMatch: true
+			}
+		</definition>
+    </strategyNode>
+
+	<!-- Churn -->
+	<strategyNode>
+		<name>SuggestTravelNode</name>
+		<description>If Opportunity high and not declined travel, suggest travel</description>
+		<parentNode>BigOpportunity</parentNode>
+		<type>4<!--If--></type>
+		<definition>
+			{
+			expressions: {
+				"SuggestTravel":
+					"$Record.DeclinedTravel__c == false"
+			},
+			onlyFirstMatch: false
+			}
+		</definition>
+	</strategyNode>
+
+    <strategyNode>
+        <name>SuggestTravel</name>
+	    <description>Suggest Travel</description>
+	    <parentNode>SuggestTravelNode</parentNode>
+		<type>1<!--SoqlLoad--></type>
+        <definition>{soql: "SELECT Name, Description, ActionReference FROM Proposition WHERE Name='Suggest Travel'"}</definition>
+    </strategyNode>
+    
+</RecommendationStrategy>
